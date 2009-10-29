@@ -17,6 +17,7 @@ gboolean Config::m_double_pinyin = FALSE;
 gint Config::m_double_pinyin_schema = 0;
 
 gboolean Config::m_init_chinese = TRUE;
+gboolean Config::m_init_english = FALSE;
 gboolean Config::m_init_full = FALSE;
 gboolean Config::m_init_full_punct = TRUE;
 gboolean Config::m_init_simp_chinese = TRUE;

@@ -19,7 +19,6 @@ PrefixEditor::~PrefixEditor (void)
 gboolean
 PrefixEditor::insert (gint ch)
 {
-    // g_debug ("this=%p", this);
     /* is full */
     if (G_UNLIKELY (m_text.length () >= MAX_WORD_LEN))
         return FALSE;
@@ -49,6 +48,18 @@ PrefixEditor::isEmpty (void) const
     }
 
     return false;
+}
+
+guint
+PrefixEditor::cursor (void) const
+{
+    return m_cursor;
+}
+
+void
+PrefixEditor::reset (void)
+{
+    m_text.clear ();
 }
 
 #if 0

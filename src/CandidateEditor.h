@@ -16,6 +16,7 @@ public:
     void update (const String &prefix);
     void setRootNode (Trie *root);
     bool isEmpty (void) const;
+    void reset (void);
 
     TrieNodeArray candidates (void) const;
     const gchar * candidate (guint i) const;
@@ -23,7 +24,6 @@ public:
     void printAllCandidates (void) const;
 
 private:
-    String  m_prefix;
     TrieNodeArray m_nodearray;
 
     /* root node */

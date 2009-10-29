@@ -2,7 +2,7 @@
 
 namespace PY {
 
-Trie *CandidateEditor::m_root;
+Trie *CandidateEditor::m_root = 0;
 
 CandidateEditor::CandidateEditor (void)
 {
@@ -38,6 +38,12 @@ bool
 CandidateEditor::isEmpty (void) const
 {
     return m_nodearray.isEmpty ();
+}
+
+void
+CandidateEditor::reset (void)
+{
+    m_nodearray.removeAll ();
 }
 
 const gchar *

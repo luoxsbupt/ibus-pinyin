@@ -15,6 +15,8 @@ public:
     const String & prefix (void) const;
     gint prefixLength (void) const;
     bool isEmpty (void) const;
+    guint cursor (void) const;
+    void reset (void);
 
     /*
     gboolean removeCharBefore (void);

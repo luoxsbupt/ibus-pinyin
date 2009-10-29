@@ -21,9 +21,12 @@ namespace PY {
 PinyinEngine::PinyinEngine (IBusEngine *engine)
     : m_engine (engine),
       m_pinyin_editor (NULL),
+      m_prefix_editor (NULL),
+      m_candidate_editor (NULL),
       m_need_update (0),
       m_lookup_table (Config::pageSize ()),
       m_mode_chinese (Config::initChinese ()),
+      m_mode_english (Config::initEnglish ()),
       m_mode_full (Config::initFull ()),
       m_mode_full_punct (Config::initFullPunct ()),
       m_quote (TRUE),
@@ -143,6 +146,17 @@ PinyinEngine::processPinyin (guint keyval, guint keycode, guint modifiers)
     return TRUE;
 }
 
+inline gboolean
+PinyinEngine::processPrefix (guint keyval, guint keycode, guint modifiers)
+{
+    if (m_prefix_editor->insert (keyval)) {
+        updateCandidateEditor ();
+        updateUI (FALSE);
+    }
+
+    return TRUE;
+}
+
 /**
  * process capital letters
  */
@@ -222,6 +236,7 @@ PinyinEngine::processNumber (guint keyval, guint keycode, guint modifiers)
 inline gboolean
 PinyinEngine::processSpace (guint keyval, guint keycode, guint modifiers)
 {
+if ( m_mode_chinese ) {
     if (CMSHM_FILTER (modifiers) != 0)
         return FALSE;
 
@@ -242,6 +257,11 @@ PinyinEngine::processSpace (guint keyval, guint keycode, guint modifiers)
     else {
         commit (m_mode_full ? "　" : " ");
     }
+} else if ( m_mode_english ) {
+    commit (m_candidate_editor->candidate (0));
+    reset ();
+}
+
     return TRUE;
 }
 
@@ -528,7 +548,13 @@ PinyinEngine::processInitMode (guint keyval, guint keycode, guint modifiers)
     switch (keyval) {
     /* letters */
     case IBUS_a ... IBUS_z:
-        retval = processPinyin (keyval, keycode, modifiers);
+        /* add by luoxs */
+        if (keyval == IBUS_v && isEmpty () ) {
+            cout << "toggle to english mode!" << endl;
+            toggleModeEnglish ();
+        } else {
+            retval = processPinyin (keyval, keycode, modifiers);
+        }
         break;
     case IBUS_A ... IBUS_Z:
         retval = processCapitalLetter (keyval, keycode, modifiers);
@@ -581,6 +607,26 @@ PinyinEngine::processRawMode (guint keyval, guint keycode, guint modifiers)
 inline gboolean
 PinyinEngine::processEnglishMode (guint keyval, guint keycode, guint modifiers)
 {
+    static gboolean flag = FALSE;
+    if ( !flag ) {
+        flag = TRUE;
+        return FALSE;
+    } else {
+        flag = FALSE;
+    }
+
+    switch ( keyval ) {
+        case IBUS_a ... IBUS_z:
+            processPrefix (keyval, keycode, modifiers);
+            break;
+        case IBUS_space:
+            processSpace (keyval, keycode, modifiers);
+            break;
+        default:
+            cerr << "invalid character!" << endl;
+            break;
+    }
+
     return TRUE;
 }
 
@@ -596,10 +642,24 @@ PinyinEngine::processExtensionMode (guint keyval, guint keycode, guint modifiers
     return TRUE;
 }
 
+void 
+PinyinEngine::setInputMode ()
+{
+    if ( m_mode_chinese ) {
+        m_input_mode = MODE_INIT;
+    } else if ( m_mode_english ) {
+        m_input_mode = MODE_ENGLISH;
+    } else {
+        /* add later */
+    }
+}
+
 gboolean
 PinyinEngine::processKeyEvent (guint keyval, guint keycode, guint modifiers)
 {
     gboolean retval;
+
+    setInputMode ();
 
     switch (m_input_mode) {
     case MODE_INIT:
@@ -697,6 +757,15 @@ PinyinEngine::toggleModeChinese (void)
 }
 
 inline void
+PinyinEngine::toggleModeEnglish (void)
+{
+    m_mode_chinese = m_mode_chinese ? FALSE : TRUE;
+    m_mode_english = m_mode_english ? FALSE : TRUE;
+    m_prefix_editor = new PrefixEditor;
+    m_candidate_editor = new CandidateEditor;
+}
+
+inline void
 PinyinEngine::toggleModeFull (void)
 {
     m_mode_full = !m_mode_full;
@@ -777,6 +846,9 @@ PinyinEngine::updatePreeditText (void)
     case MODE_RAW:
         updatePreeditTextInRawMode ();
         break;
+    case MODE_ENGLISH:
+        updatePreeditTextInENGLISHMode ();
+        break;
     default:
         break;
     };
@@ -803,6 +875,14 @@ PinyinEngine::updatePreeditTextInRawMode (void)
     StaticText preedit_text (m_raw_editor);
     preedit_text.appendAttribute (IBUS_ATTR_TYPE_UNDERLINE, IBUS_ATTR_UNDERLINE_SINGLE, 0, -1);
     ibus_engine_update_preedit_text (m_engine, preedit_text, m_raw_editor.cursor (), TRUE);
+}
+
+void
+PinyinEngine::updatePreeditTextInENGLISHMode (void)
+{
+    StaticText preedit_text (m_prefix_editor->prefix ());
+    preedit_text.appendAttribute (IBUS_ATTR_TYPE_UNDERLINE, IBUS_ATTR_UNDERLINE_SINGLE, 0, -1);
+    ibus_engine_update_preedit_text (m_engine, preedit_text, m_prefix_editor->cursor (), TRUE);
 }
 
 void
@@ -920,7 +1000,21 @@ PinyinEngine::updatePreeditTextInInitEditingMode (void)
 void
 PinyinEngine::updateAuxiliaryText (void)
 {
+    switch ( m_input_mode ) {
+        case MODE_INIT:
+            updateAuxiliaryTextInInit ();
+            break;
+        case MODE_ENGLISH:
+            updateAuxiliaryTextInEnglish ();
+            break;
+        default:
+            break;
+    }
+}
 
+void
+PinyinEngine::updateAuxiliaryTextInInit (void)
+{
     /* clear pinyin array */
     if (G_UNLIKELY (isEmpty () ||
         m_phrase_editor.cursor () == m_pinyin_editor->pinyin ().length ())) {
@@ -957,8 +1051,16 @@ PinyinEngine::updateAuxiliaryText (void)
 }
 
 void
+PinyinEngine::updateAuxiliaryTextInEnglish ()
+{
+    StaticText aux_text (m_prefix_editor->prefix ());
+    ibus_engine_update_auxiliary_text (m_engine, aux_text, TRUE);
+}
+
+void
 PinyinEngine::updateLookupTable (void)
 {
+if ( m_input_mode == MODE_INIT ) {
     m_lookup_table.clear ();
     m_lookup_table.setPageSize (Config::pageSize ());
 
@@ -987,15 +1089,35 @@ PinyinEngine::updateLookupTable (void)
             m_lookup_table.appendCandidate (text);
         }
     }
-    ibus_engine_update_lookup_table_fast (m_engine,
-                                          m_lookup_table,
-                                          TRUE);
+} else if ( m_input_mode == MODE_ENGLISH ) {
+    m_lookup_table.clear ();
+    m_lookup_table.setPageSize (Config::pageSize ());
+
+    guint candidate_nr = m_candidate_editor->candidates ().length ();
+    if (G_UNLIKELY (candidate_nr == 0)) {
+        ibus_engine_hide_lookup_table (m_engine);
+        return;
+    }
+
+    for (guint i = 0; i < candidate_nr; i++) {
+        StaticText text (m_candidate_editor->candidate (i));
+        m_lookup_table.appendCandidate (text);
+    }
+}
+
+    ibus_engine_update_lookup_table_fast (m_engine, m_lookup_table, TRUE);
 }
 
 void
 PinyinEngine::updatePhraseEditor (void)
 {
     m_phrase_editor.update (m_pinyin_editor->pinyin ());
+}
+
+void
+PinyinEngine::updateCandidateEditor (void)
+{
+    m_candidate_editor->update (m_prefix_editor->prefix ());
 }
 
 inline void
