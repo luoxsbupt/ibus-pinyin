@@ -662,7 +662,8 @@ PinyinEngine::processEnglishMode (guint keyval, guint keycode, guint modifiers)
             break;
         case IBUS_Return:
         case IBUS_KP_Enter:
-            retval = processReturn (keyval, keycode, modifiers);
+            // retval = processReturn (keyval, keycode, modifiers);
+            break;
         case IBUS_Escape:
             reset ();
             break;
