@@ -188,6 +188,25 @@ PinyinEngine::processCapitalLetter (guint keyval, guint keycode, guint modifiers
 inline gboolean
 PinyinEngine::processNumber (guint keyval, guint keycode, guint modifiers)
 {
+    switch ( m_input_mode ) {
+        case MODE_INIT:
+            processNumberInInit (keyval, keycode, modifiers);
+            break;
+        case MODE_RAW:
+            break;
+        case MODE_ENGLISH:
+            processNumberInEnglish (keyval, keycode, modifiers);
+            break;
+        default:
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
+inline gboolean
+PinyinEngine::processNumberInInit (guint keyval, guint keycode, guint modifiers)
+{
     /* English mode */
     if (G_UNLIKELY (!m_mode_chinese)) {
         commit ((gunichar) m_mode_full ? HalfFullConverter::toFull (keyval) : keyval);
@@ -230,6 +249,20 @@ PinyinEngine::processNumber (guint keyval, guint keycode, guint modifiers)
         selectCandidateInPage (i);
     else if ((modifiers & ~ IBUS_LOCK_MASK) == IBUS_CONTROL_MASK)
         resetCandidateInPage (i);
+    return TRUE;
+}
+
+inline gboolean
+PinyinEngine::processNumberInEnglish (guint keyval, guint keycode, guint modifiers)
+{
+    guint index = keyval - '0';
+    if ( m_candidate_editor->candidates ().length () <= 0 ||
+         m_candidate_editor->candidates ().length () < index ) {
+        return TRUE;
+    }
+
+    commit (m_candidate_editor->candidate (index - 1));
+    reset ();
     return TRUE;
 }
 
@@ -607,6 +640,7 @@ PinyinEngine::processRawMode (guint keyval, guint keycode, guint modifiers)
 inline gboolean
 PinyinEngine::processEnglishMode (guint keyval, guint keycode, guint modifiers)
 {
+    gboolean retval = FALSE;
     static gboolean flag = FALSE;
     if ( !flag ) {
         flag = TRUE;
@@ -617,10 +651,20 @@ PinyinEngine::processEnglishMode (guint keyval, guint keycode, guint modifiers)
 
     switch ( keyval ) {
         case IBUS_a ... IBUS_z:
-            processPrefix (keyval, keycode, modifiers);
+            retval = processPrefix (keyval, keycode, modifiers);
             break;
         case IBUS_space:
-            processSpace (keyval, keycode, modifiers);
+            retval = processSpace (keyval, keycode, modifiers);
+            break;
+        case IBUS_0 ... IBUS_9:
+        case IBUS_KP_0 ... IBUS_KP_9:
+            retval = processNumber (keyval, keycode, modifiers);
+            break;
+        case IBUS_Return:
+        case IBUS_KP_Enter:
+            retval = processReturn (keyval, keycode, modifiers);
+        case IBUS_Escape:
+            reset ();
             break;
         default:
             cerr << "invalid character!" << endl;

@@ -106,6 +106,8 @@ private:
     gboolean processPrefix (guint keyval, guint keycode, guint modifiers);
     gboolean processCapitalLetter (guint keyval, guint keycode, guint modifiers);
     gboolean processNumber (guint keyval, guint keycode, guint modifiers);
+    gboolean processNumberInInit (guint keyval, guint keycode, guint modifiers);
+    gboolean processNumberInEnglish (guint keyval, guint keycode, guint modifiers);
     gboolean processPunct (guint keyval, guint keycode, guint modifiers);
     gboolean processSpace (guint keyval, guint keycode, guint modifiers);
     gboolean processOthers (guint keyval, guint keycode, guint modifiers);
