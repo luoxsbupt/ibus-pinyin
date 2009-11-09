@@ -256,9 +256,15 @@ inline gboolean
 PinyinEngine::processNumberInEnglish (guint keyval, guint keycode, guint modifiers)
 {
     guint index = keyval - '0';
+    if ( index <= 0 || index > Config::pageSize () ) {
+        /* check input value */
+        return FALSE;
+    }
+
     if ( m_candidate_editor->candidates ().length () <= 0 ||
          m_candidate_editor->candidates ().length () < index ) {
-        return TRUE;
+         /* check length of candidates */
+        return FALSE;
     }
 
     commit (m_candidate_editor->candidate (index - 1));
@@ -292,6 +298,7 @@ if ( m_mode_chinese ) {
     }
 } else if ( m_mode_english ) {
     commit (m_candidate_editor->candidate (0));
+    toggleModeChinese ();
     reset ();
 }
 
@@ -662,7 +669,57 @@ PinyinEngine::processEnglishMode (guint keyval, guint keycode, guint modifiers)
             break;
         case IBUS_Return:
         case IBUS_KP_Enter:
-            // retval = processReturn (keyval, keycode, modifiers);
+            commit (m_prefix_editor->prefix ());
+            toggleModeChinese ();
+            reset ();
+            break;
+        case IBUS_BackSpace:
+            retval = m_prefix_editor->removeCharBefore ();
+            updateCandidateEditor ();
+            updateUI (FALSE);
+            break;
+        case IBUS_Delete:
+            retval = m_prefix_editor->removeCharAfter ();
+            updateCandidateEditor ();
+            updateUI (FALSE);
+            break;
+        case IBUS_Left:
+        case IBUS_KP_Left:
+            retval = m_prefix_editor->moveCursorLeft ();
+            updateCandidateEditor ();
+            updateUI (FALSE);
+            break;
+        case IBUS_Right:
+        case IBUS_KP_Right:
+            retval = m_prefix_editor->moveCursorRight ();
+            updateCandidateEditor ();
+            updateUI (FALSE);
+            break;
+        case IBUS_Up:
+        case IBUS_KP_Up:
+            cursorUp ();
+            break;
+        case IBUS_Down:
+        case IBUS_KP_Down:
+            cursorDown ();
+            break;
+        case IBUS_Page_Up:
+        case IBUS_KP_Page_Up:
+            pageUp ();
+            break;
+        case IBUS_Page_Down:
+        case IBUS_KP_Page_Down:
+            pageDown ();
+            break;
+        case IBUS_Home:
+            retval = m_prefix_editor->moveCursorToBegin ();
+            updateCandidateEditor ();
+            updateUI (FALSE);
+            break;
+        case IBUS_End:
+            retval = m_prefix_editor->moveCursorToEnd ();
+            updateCandidateEditor ();
+            updateUI (FALSE);
             break;
         case IBUS_Escape:
             reset ();

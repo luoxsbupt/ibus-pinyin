@@ -18,6 +18,13 @@ public:
     guint cursor (void) const;
     void reset (void);
 
+    gboolean removeCharAfter (void);
+    gboolean removeCharBefore (void);
+    gboolean moveCursorLeft (void);
+    gboolean moveCursorRight (void);
+    gboolean moveCursorToBegin (void);
+    gboolean moveCursorToEnd (void);
+
     /*
     gboolean removeCharBefore (void);
     gboolean removeCharAfter (void);
@@ -40,6 +47,7 @@ private:
 private:
     gint m_cursor;
     String m_text;
+    String m_prefix;
 };
 
 };

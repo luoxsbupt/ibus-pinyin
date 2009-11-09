@@ -42,10 +42,9 @@ public:
                 m_raw_editor.reset ();
                 break;
             case MODE_ENGLISH:
-                /* reset to restore origin status */
+                m_input_mode = MODE_INIT;
                 m_mode_chinese = TRUE;
                 m_mode_english = FALSE;
-                m_input_mode = MODE_INIT;
                 m_prefix_editor->reset ();
                 m_candidate_editor->reset ();
                 updateUI (need_update);
