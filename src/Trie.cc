@@ -1,6 +1,5 @@
 #include <fstream>
 #include <cstdlib>
-#include <queue>
 #include "Trie.h"
 #include "QSort.h"
 #include "Queue.h"
@@ -74,7 +73,6 @@ Trie::createTrieTree(const gchar *filename)
     delete [] buf;
 }
 
-#if 0
 TrieNode *
 Trie::search (const KeyType *elem) const
 {
@@ -84,20 +82,19 @@ Trie::search (const KeyType *elem) const
 
     while ( i < elem->len && node != NULL && node->kind == BRANCH ) {
         index = elem->str[i] - 'a';
-        node = node->branch.child[index];
+        node = node->unMem.branch.child[index];
         ++i;
     }
 
     if ( node != NULL
             && node->kind == LEAF
-            && (node->leaf.key.len == elem->len)
-            && memcmp (elem->str, node->leaf.key.str, elem->len) == 0 ) {
+            && (node->unMem.leaf.key.len == elem->len)
+            && memcmp (elem->str, node->unMem.leaf.key.str, elem->len) == 0 ) {
         return node;
     }
 
     return NULL;
 }
-#endif
 
 void
 Trie::insert (const KeyType *key, const RecordType *record)

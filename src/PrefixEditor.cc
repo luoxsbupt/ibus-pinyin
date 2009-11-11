@@ -117,20 +117,18 @@ PrefixEditor::moveCursorToBegin (void)
         return FALSE;
 
     m_cursor = 0;
-    m_pinyin.removeAll ();
-    m_pinyin_len = 0;
+    m_prefix.clear ();
 
     return TRUE;
 }
 
 gboolean
-FullPinyinEditor::moveCursorToEnd (void)
+PrefixEditor::moveCursorToEnd (void)
 {
     if (G_UNLIKELY (m_cursor == m_text.length ()))
         return FALSE;
 
     m_cursor = m_text.length ();
-    updatePinyin  ();
 
     return TRUE;
 }

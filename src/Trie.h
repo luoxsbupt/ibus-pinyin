@@ -18,7 +18,7 @@ public :
 
 public :
     void createTrieTree(const gchar *filename);
-    // TrieNode * search (const KeyType *elem) const;
+    TrieNode * search (const KeyType *elem) const;
     void insert (const KeyType *elem, const RecordType *record);
     void prefixMatch (const String &str, TrieNodeArray &nodearray);
     TrieNode *getRoot (void) const        { return m_root; }
@@ -27,9 +27,9 @@ public :
 
 private :
     gint order (const gchar c) const;
-    void destroy ();
     void saveNewWord (const gchar *save_ptr, gint len);
     void sortByFreq (TrieNodeArray &nodearray) const;
+    void destroy ();
 
 private :
 

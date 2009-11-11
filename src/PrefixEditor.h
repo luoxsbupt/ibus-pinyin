@@ -25,25 +25,6 @@ public:
     gboolean moveCursorToBegin (void);
     gboolean moveCursorToEnd (void);
 
-    /*
-    gboolean removeCharBefore (void);
-    gboolean removeCharAfter (void);
-    gboolean removeWordBefore (void);
-    gboolean removeWordAfter (void);
-
-    gboolean moveCursorLeft (void);
-    gboolean moveCursorRight (void);
-    gboolean moveCursorLeftByWord (void);
-    gboolean moveCursorRightByWord (void);
-    gboolean moveCursorToBegin (void);
-    gboolean moveCursorToEnd (void);
-
-    gboolean reset (void);
-
-private:
-    void updatePinyin (void);
-    */
-
 private:
     gint m_cursor;
     String m_text;

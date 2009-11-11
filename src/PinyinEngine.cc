@@ -267,6 +267,10 @@ PinyinEngine::processNumberInEnglish (guint keyval, guint keycode, guint modifie
         return FALSE;
     }
 
+    guint pageSize = m_lookup_table.pageSize ();
+    guint cursorPos = m_lookup_table.cursorPos ();
+    index += (cursorPos / pageSize) * pageSize;
+
     commit (m_candidate_editor->candidate (index - 1));
     reset ();
     return TRUE;
