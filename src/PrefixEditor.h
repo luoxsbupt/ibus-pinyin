@@ -12,8 +12,10 @@ public:
     virtual ~PrefixEditor (void);
 
     gboolean insert (gint ch);
-    const String & prefix (void) const;
-    gint prefixLength (void) const;
+    const String & prefix (void);
+    const String & text (void) const;
+    guint prefixLength (void);
+    guint textLength (void) const;
     bool isEmpty (void) const;
     guint cursor (void) const;
     void reset (void);

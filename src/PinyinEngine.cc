@@ -594,7 +594,6 @@ PinyinEngine::processInitMode (guint keyval, guint keycode, guint modifiers)
     case IBUS_a ... IBUS_z:
         /* add by luoxs */
         if (keyval == IBUS_v && isEmpty () ) {
-            cout << "toggle to english mode!" << endl;
             toggleModeEnglish ();
         } else {
             retval = processPinyin (keyval, keycode, modifiers);
@@ -673,7 +672,7 @@ PinyinEngine::processEnglishMode (guint keyval, guint keycode, guint modifiers)
             break;
         case IBUS_Return:
         case IBUS_KP_Enter:
-            commit (m_prefix_editor->prefix ());
+            commit (m_prefix_editor->text ());
             toggleModeChinese ();
             reset ();
             break;
@@ -986,7 +985,7 @@ PinyinEngine::updatePreeditTextInRawMode (void)
 void
 PinyinEngine::updatePreeditTextInENGLISHMode (void)
 {
-    StaticText preedit_text (m_prefix_editor->prefix ());
+    StaticText preedit_text (m_prefix_editor->text ());
     preedit_text.appendAttribute (IBUS_ATTR_TYPE_UNDERLINE, IBUS_ATTR_UNDERLINE_SINGLE, 0, -1);
     ibus_engine_update_preedit_text (m_engine, preedit_text, m_prefix_editor->cursor (), TRUE);
 }
@@ -1159,7 +1158,24 @@ PinyinEngine::updateAuxiliaryTextInInit (void)
 void
 PinyinEngine::updateAuxiliaryTextInEnglish ()
 {
-    StaticText aux_text (m_prefix_editor->prefix ());
+    if ( m_prefix_editor->textLength () == 0 ||
+         m_prefix_editor->cursor () == m_prefix_editor->textLength () ) {
+        StaticText aux_text (m_prefix_editor->prefix ());
+        ibus_engine_update_auxiliary_text (m_engine, aux_text, TRUE);
+        return;
+    }
+
+    m_buffer.clear ();
+    guint i = 0;
+    for ( ; i < m_prefix_editor->cursor (); ++i) {
+        m_buffer << m_prefix_editor->text()[i];
+    }
+
+    m_buffer << '|';
+    for ( ; i < m_prefix_editor->text ().length (); ++i) {
+        m_buffer << m_prefix_editor->text()[i];
+    }
+    StaticText aux_text (m_buffer);
     ibus_engine_update_auxiliary_text (m_engine, aux_text, TRUE);
 }
 

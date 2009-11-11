@@ -29,15 +29,31 @@ PrefixEditor::insert (gint ch)
 }
 
 const String &
-PrefixEditor::prefix (void) const
+PrefixEditor::prefix (void)
 {
-    // String prefix (m_text, 0, m_cursor);
-    // return prefix;
+    guint i = 0;
+    m_prefix.clear ();
+    for ( ; i < m_cursor; ++i) {
+        m_prefix.insert (i, m_text[i]);
+    }
+
+    return m_prefix;
+}
+
+const String &
+PrefixEditor::text (void) const
+{
     return m_text;
 }
 
-gint
-PrefixEditor::prefixLength (void) const
+guint
+PrefixEditor::prefixLength (void)
+{
+    return (this->prefix ()).length ();
+}
+
+guint
+PrefixEditor::textLength (void) const
 {
     return m_text.length ();
 }
@@ -117,7 +133,6 @@ PrefixEditor::moveCursorToBegin (void)
         return FALSE;
 
     m_cursor = 0;
-    m_prefix.clear ();
 
     return TRUE;
 }
@@ -133,100 +148,5 @@ PrefixEditor::moveCursorToEnd (void)
     return TRUE;
 }
 
-#if 0
-void
-FullPinyinEditor::updateWordPrefix (void)
-{
-    if (G_UNLIKELY (m_text.isEmpty ())) {
-        m_pinyin.removeAll ();
-        m_pinyin_len = 0;
-    }
-    else {
-        m_pinyin_len = m_parser.parse (m_text,              // text
-                                       m_cursor,            // text length
-                                       Config::option (),   // option
-                                       m_pinyin,            // result
-                                       MAX_PHRASE_LEN);     // max result length
-        }
-    }
 };
 
-gboolean
-FullPinyinEditor::reset (void)
-{
-    gboolean retval = FALSE;
-    if (m_cursor != 0) {
-        m_cursor = 0;
-        retval = TRUE;
-    }
-
-    if (m_text.length () != 0) {
-        m_text.truncate (0);
-        retval = TRUE;
-    }
-
-    if (retval)
-        updatePinyin ();
-
-    return retval;
-}
-
-gboolean
-FullPinyinEditor::removeWordBefore (void)
-{
-    if (G_UNLIKELY (m_cursor == 0))
-        return FALSE;
-
-    guint cursor;
-
-    if (G_UNLIKELY (m_cursor > m_pinyin_len)) {
-        cursor = m_pinyin_len;
-    }
-    else {
-        const Pinyin * p = m_pinyin.pop ();
-        cursor = m_cursor - p->len;
-        m_pinyin_len -= p->len;
-    }
-
-    m_text.erase (cursor, m_cursor - cursor);
-    m_cursor = cursor;
-    return TRUE;
-}
-
-gboolean
-FullPinyinEditor::removeWordAfter (void)
-{
-    if (G_UNLIKELY (m_cursor == m_text.length ()))
-        return FALSE;
-
-    m_text.erase (m_cursor, -1);
-    return TRUE;
-}
-
-gboolean
-FullPinyinEditor::moveCursorLeftByWord (void)
-{
-    if (G_UNLIKELY (m_cursor == 0))
-        return FALSE;
-
-    if (G_UNLIKELY (m_cursor > m_pinyin_len)) {
-        m_cursor = m_pinyin_len;
-        return TRUE;
-    }
-
-    const Pinyin * p = m_pinyin.pop ();
-    m_cursor -= p->len;
-    m_pinyin_len -= p->len;
-
-    return TRUE;
-}
-
-gboolean
-FullPinyinEditor::moveCursorRightByWord (void)
-{
-    return moveCursorToEnd ();
-}
-
-#endif
-
-};
