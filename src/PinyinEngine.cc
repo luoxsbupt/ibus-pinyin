@@ -301,6 +301,10 @@ if ( m_mode_chinese ) {
         commit (m_mode_full ? "　" : " ");
     }
 } else if ( m_mode_english ) {
+    if ( m_candidate_editor->isEmpty () ) {
+        return TRUE;
+    }
+
     commit (m_candidate_editor->candidate (0));
     toggleModeChinese ();
     reset ();

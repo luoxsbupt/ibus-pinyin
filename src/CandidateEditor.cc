@@ -6,6 +6,8 @@ Trie *CandidateEditor::m_root = 0;
 
 CandidateEditor::CandidateEditor (void)
 {
+    m_candidatePointer = NULL;
+
     if ( !m_root ) {
         m_root = new Trie;
     }
