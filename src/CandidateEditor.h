@@ -28,7 +28,6 @@ private:
 
     /* root node */
     static Trie     *m_root;
-    TrieNode        *m_candidatePointer;
 };
 
 };
