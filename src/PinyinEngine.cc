@@ -1174,13 +1174,18 @@ PinyinEngine::updateAuxiliaryTextInInit (void)
 void
 PinyinEngine::updateAuxiliaryTextInEnglish ()
 {
-    if ( m_prefix_editor->textLength () == 0 ||
-         m_prefix_editor->cursor () == m_prefix_editor->textLength () ) {
+    if ( m_prefix_editor->prefixLength () == 0 ) {
+        ibus_engine_hide_auxiliary_text (m_engine);
+        return;
+    }
+
+    if ( m_prefix_editor->cursor () == m_prefix_editor->textLength () ) {
         StaticText aux_text (m_prefix_editor->prefix ());
         ibus_engine_update_auxiliary_text (m_engine, aux_text, TRUE);
         return;
     }
 
+    /* move cursor to left */
     m_buffer.clear ();
     guint i = 0;
     for ( ; i < m_prefix_editor->cursor (); ++i) {
