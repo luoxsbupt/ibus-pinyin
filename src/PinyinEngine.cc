@@ -280,36 +280,39 @@ PinyinEngine::processNumberInEnglish (guint keyval, guint keycode, guint modifie
 inline gboolean
 PinyinEngine::processSpace (guint keyval, guint keycode, guint modifiers)
 {
-if ( m_mode_chinese ) {
-    if (CMSHM_FILTER (modifiers) != 0)
-        return FALSE;
+    if ( m_mode_chinese ) {
+        if (CMSHM_FILTER (modifiers) != 0)
+            return FALSE;
 
-    if (G_UNLIKELY (modifiers & IBUS_SHIFT_MASK)) {
-        toggleModeFull ();
-        return TRUE;
-    }
+        if (G_UNLIKELY (modifiers & IBUS_SHIFT_MASK)) {
+            toggleModeFull ();
+            return TRUE;
+        }
 
-    /* Chinese mode */
-    if (G_UNLIKELY (m_mode_chinese && !isEmpty ())) {
-        if (m_phrase_editor.pinyinExistsAfterCursor ()) {
-            selectCandidate (m_lookup_table.cursorPos ());
+        /* Chinese mode */
+        if (G_UNLIKELY (m_mode_chinese && !isEmpty ())) {
+            if (m_phrase_editor.pinyinExistsAfterCursor ()) {
+                selectCandidate (m_lookup_table.cursorPos ());
+            }
+            else {
+                commit ();
+            }
         }
         else {
-            commit ();
+            commit (m_mode_full ? "　" : " ");
         }
-    }
-    else {
-        commit (m_mode_full ? "　" : " ");
-    }
-} else if ( m_mode_english ) {
-    if ( m_candidate_editor->isEmpty () ) {
-        return TRUE;
-    }
+    } else if ( m_mode_english ) {
+        if ( m_candidate_editor->isEmpty () ) {
+            if ( m_prefix_editor->textLength () > 0 ) {
+                commit (m_prefix_editor->text ());
+            }
+        } else {
+            commit (m_candidate_editor->candidate (0));
+        }
 
-    commit (m_candidate_editor->candidate (0));
-    toggleModeChinese ();
-    reset ();
-}
+        toggleModeChinese ();
+        reset ();
+    }
 
     return TRUE;
 }
