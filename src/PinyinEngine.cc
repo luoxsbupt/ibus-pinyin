@@ -272,6 +272,7 @@ PinyinEngine::processNumberInEnglish (guint keyval, guint keycode, guint modifie
     index += (cursorPos / pageSize) * pageSize;
 
     commit (m_candidate_editor->candidate (index - 1));
+    toggleModeChinese ();
     reset ();
     return TRUE;
 }
@@ -597,7 +598,7 @@ PinyinEngine::processInitMode (guint keyval, guint keycode, guint modifiers)
     /* letters */
     case IBUS_a ... IBUS_z:
         /* add by luoxs */
-        if (keyval == IBUS_v && isEmpty () ) {
+        if (keyval == IBUS_v && isEmpty ()) {
             toggleModeEnglish ();
             return TRUE;
         }
@@ -680,6 +681,7 @@ PinyinEngine::processEnglishMode (guint keyval, guint keycode, guint modifiers)
             commit (m_prefix_editor->text ());
             toggleModeChinese ();
             reset ();
+            retval = TRUE;
             break;
         case IBUS_BackSpace:
             retval = m_prefix_editor->removeCharBefore ();

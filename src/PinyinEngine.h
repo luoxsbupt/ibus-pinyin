@@ -48,8 +48,14 @@ public:
                 m_prefix_editor->reset ();
                 m_candidate_editor->reset ();
                 updateUI (need_update);
-                delete m_prefix_editor;
-                delete m_candidate_editor;
+                if ( m_prefix_editor ) {
+                    delete m_prefix_editor;
+                    m_prefix_editor = NULL;
+                }
+                if ( m_candidate_editor ) {
+                    delete m_candidate_editor;
+                    m_candidate_editor = NULL;
+                }
                 return ;
             default:
                 break;
