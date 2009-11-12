@@ -599,9 +599,10 @@ PinyinEngine::processInitMode (guint keyval, guint keycode, guint modifiers)
         /* add by luoxs */
         if (keyval == IBUS_v && isEmpty () ) {
             toggleModeEnglish ();
-        } else {
-            retval = processPinyin (keyval, keycode, modifiers);
+            return TRUE;
         }
+
+        retval = processPinyin (keyval, keycode, modifiers);
         break;
     case IBUS_A ... IBUS_Z:
         retval = processCapitalLetter (keyval, keycode, modifiers);
@@ -736,7 +737,7 @@ PinyinEngine::processEnglishMode (guint keyval, guint keycode, guint modifiers)
             break;
     }
 
-    return TRUE;
+    return retval;
 }
 
 inline gboolean
@@ -872,6 +873,12 @@ PinyinEngine::toggleModeEnglish (void)
     m_mode_english = m_mode_english ? FALSE : TRUE;
     m_prefix_editor = new PrefixEditor;
     m_candidate_editor = new CandidateEditor;
+
+    m_prop_chinese.setLabel (m_mode_chinese ? "CN" : "EN");
+    m_prop_chinese.setIcon (m_mode_chinese ?
+                                PKGDATADIR"/icons/chinese.svg" :
+                                PKGDATADIR"/icons/english.svg");
+    ibus_engine_update_property (m_engine, m_prop_chinese);
 }
 
 inline void
