@@ -622,14 +622,14 @@ PinyinEngine::processInitMode (guint keyval, guint keycode, guint modifiers)
     switch (keyval) {
     /* letters */
     case IBUS_a ... IBUS_z:
-        /* add by luoxs */
-        if (keyval == IBUS_v && isEmpty ()) {
-            toggleModeEnglish ();
-            retval = TRUE;
-        } else {
-            retval = processPinyin (keyval, keycode, modifiers);
+        if (keyval == IBUS_v) {
+            if ( isEmpty () && !(modifiers & IBUS_CONTROL_MASK)) {
+                toggleModeEnglish ();
+                return TRUE;
+            }
         }
 
+        retval = processPinyin (keyval, keycode, modifiers);
         break;
     case IBUS_A ... IBUS_Z:
         retval = processCapitalLetter (keyval, keycode, modifiers);
