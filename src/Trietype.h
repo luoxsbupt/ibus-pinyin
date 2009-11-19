@@ -8,7 +8,12 @@ namespace PY {
 #define LINE_BUF_LEN 80
 #define MAX_WORD_LEN 30
 
-typedef gint RecordType;
+struct RecordType
+{
+    gint freq;
+    gboolean isUserWord;
+};
+
 struct KeyType
 {
     gchar *str;
@@ -39,7 +44,8 @@ struct TrieNode
         unMem.leaf.key.str = new gchar [key->len + 1];
         memcpy (unMem.leaf.key.str, key->str, key->len + 1);
         unMem.leaf.key.len = key->len;
-        unMem.leaf.info = *record;
+        unMem.leaf.info.freq = record->freq;
+        unMem.leaf.info.isUserWord = record->isUserWord;
     }
 
     ~TrieNode ()

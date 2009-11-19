@@ -1,5 +1,6 @@
 /* vim:set et sts=4: */
 
+#include <fstream>
 #include <ibus.h>
 #include <string.h>
 #include <libintl.h>
@@ -284,6 +285,8 @@ PinyinEngine::processSpace (guint keyval, guint keycode, guint modifiers)
         case MODE_INIT:
             processSpaceInInit (keyval, keycode, modifiers);
             break;
+        case MODE_RAW:
+            break;
         case MODE_ENGLISH:
             processSpaceInEnglish (keyval, keycode, modifiers);
             break;
@@ -327,6 +330,34 @@ PinyinEngine::processSpaceInEnglish(guint keyval, guint keycode, guint modifiers
         if ( m_candidate_editor->isEmpty () ) {
             if ( m_prefix_editor->textLength () > 0 ) {
                 commit (m_prefix_editor->text ());
+
+                /* no responding word exists, save and insert it to tree */
+                /* insert new node to trietree */
+                guint strLen = m_prefix_editor->textLength ();
+
+                KeyType key;
+                key.str = new gchar [strLen + 1];
+                memcpy (key.str, m_prefix_editor->text ().c_str(), strLen + 1);
+                key.len = strLen;
+
+                RecordType record;
+                record.freq = 1000000;
+                record.isUserWord = true;
+
+                m_candidate_editor->insertNewNode (&key, &record);
+                delete [] key.str;
+
+                /* save new word to local file */
+                ofstream ofs (".user_word", ios_base::app);
+                if ( !ofs.is_open () ) {
+                    cerr << "open \".user_wrod\" failed!" << endl;
+                }
+                ofs.write (m_prefix_editor->text (), m_prefix_editor->textLength ());
+                ofs.write ("\t", 1);
+                ofs.write ("1000000", 7);
+                ofs.write ("\n", 1);
+                ofs.flush ();
+                ofs.close ();
             }
         } else {
             commit (m_candidate_editor->candidate (0));
@@ -1139,6 +1170,8 @@ PinyinEngine::updateAuxiliaryText (void)
         case MODE_INIT:
             updateAuxiliaryTextInInit ();
             break;
+        case MODE_RAW:
+            break;
         case MODE_ENGLISH:
             updateAuxiliaryTextInEnglish ();
             break;
@@ -1188,7 +1221,7 @@ PinyinEngine::updateAuxiliaryTextInInit (void)
 void
 PinyinEngine::updateAuxiliaryTextInEnglish ()
 {
-    if ( m_prefix_editor->prefixLength () == 0 ) {
+    if ( m_prefix_editor->textLength () == 0 ) {
         ibus_engine_hide_auxiliary_text (m_engine);
         return;
     }
@@ -1210,6 +1243,7 @@ PinyinEngine::updateAuxiliaryTextInEnglish ()
     for ( ; i < m_prefix_editor->text ().length (); ++i) {
         m_buffer << m_prefix_editor->text()[i];
     }
+
     StaticText aux_text (m_buffer);
     ibus_engine_update_auxiliary_text (m_engine, aux_text, TRUE);
 }
@@ -1217,7 +1251,23 @@ PinyinEngine::updateAuxiliaryTextInEnglish ()
 void
 PinyinEngine::updateLookupTable (void)
 {
-if ( m_input_mode == MODE_INIT ) {
+    switch ( m_input_mode ) {
+        case MODE_INIT:
+            updateLookupTableInInit ();
+            break;
+        case MODE_RAW:
+            break;
+        case MODE_ENGLISH:
+            updateLookupTableInEnglish ();
+            break;
+        default:
+            break;
+    }
+}
+
+void
+PinyinEngine::updateLookupTableInInit (void)
+{
     m_lookup_table.clear ();
     m_lookup_table.setPageSize (Config::pageSize ());
 
@@ -1235,8 +1285,7 @@ if ( m_input_mode == MODE_INIT ) {
                 text.appendAttribute (IBUS_ATTR_TYPE_FOREGROUND, 0x000000ef, 0, -1);
             m_lookup_table.appendCandidate (text);
         }
-    }
-    else {
+    } else {
         for (guint i = 0; i < candidate_nr; i++) {
             m_buffer.truncate (0);
             SimpTradConverter::simpToTrad (m_phrase_editor.candidate (i), m_buffer);
@@ -1246,7 +1295,13 @@ if ( m_input_mode == MODE_INIT ) {
             m_lookup_table.appendCandidate (text);
         }
     }
-} else if ( m_input_mode == MODE_ENGLISH ) {
+
+    ibus_engine_update_lookup_table_fast (m_engine, m_lookup_table, TRUE);
+} 
+
+void
+PinyinEngine::updateLookupTableInEnglish (void)
+{
     m_lookup_table.clear ();
     m_lookup_table.setPageSize (Config::pageSize ());
 
@@ -1258,9 +1313,12 @@ if ( m_input_mode == MODE_INIT ) {
 
     for (guint i = 0; i < candidate_nr; i++) {
         StaticText text (m_candidate_editor->candidate (i));
+        if (m_candidate_editor->candidateIsUserWord (i)) {
+            text.appendAttribute (IBUS_ATTR_TYPE_FOREGROUND, 0x000000ef, 0, -1);
+        }
+
         m_lookup_table.appendCandidate (text);
     }
-}
 
     ibus_engine_update_lookup_table_fast (m_engine, m_lookup_table, TRUE);
 }
@@ -1274,7 +1332,7 @@ PinyinEngine::updatePhraseEditor (void)
 void
 PinyinEngine::updateCandidateEditor (void)
 {
-    m_candidate_editor->update (m_prefix_editor->prefix ());
+    m_candidate_editor->update (m_prefix_editor->text ());
 }
 
 inline void

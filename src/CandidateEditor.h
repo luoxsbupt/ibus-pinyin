@@ -15,7 +15,9 @@ public:
 
     void update (const String &prefix);
     void setRootNode (Trie *root);
-    bool isEmpty (void) const;
+    gboolean isEmpty (void) const;
+    gboolean candidateIsUserWord (guint i) const;
+    void insertNewNode (const KeyType *key, const RecordType *record);
     void reset (void);
 
     TrieNodeArray candidates (void) const;

@@ -9,18 +9,12 @@ namespace PY {
 
 Trie::Trie ()
 {
-    m_ofs = NULL;
     m_root = NULL;
     createTrieTree ("wordlist");
 }
 
 Trie::~Trie ()
 {
-    if ( m_ofs != NULL ) {
-        m_ofs->close ();
-        delete m_ofs;
-    }
-
     destroy ();
 }
 
@@ -45,16 +39,17 @@ Trie::createTrieTree(const gchar *filename)
         *pos = '\0';
 
         memcpy (key.str, buf, strlen(buf) + 1);
-        record = 1000000 * atof (pos + 1);
+        record.freq = 1000000 * atof (pos + 1);
+        record.isUserWord = false;
         key.len = strlen(buf);
 
         insert (&key, &record);
     }
     ifs1.close ();
 
-    ifstream ifs2 (".new_word_list", ios_base::in);
+    ifstream ifs2 (".user_word", ios_base::in);
     if ( !ifs2.is_open () ) {
-        cerr << "Trie::createTrieTree open failed! .new_word_list" << endl;
+        cerr << "Trie::createTrieTree open failed! .user_word" << endl;
     }
 
     while ( ifs2.getline (buf, LINE_BUF_LEN) ) {
@@ -62,7 +57,8 @@ Trie::createTrieTree(const gchar *filename)
         *pos = '\0';
 
         memcpy (key.str, buf, strlen(buf) + 1);
-        record = 1000000 * atof (pos + 1);
+        record.freq = 1000000 * atof (pos + 1);
+        record.isUserWord = true;
         key.len = strlen(buf);
 
         insert (&key, &record);
@@ -129,7 +125,7 @@ Trie::insert (const KeyType *key, const RecordType *record)
         && node->kind == LEAF
         && (node->unMem.leaf.key.len == key->len)
         && memcmp (node->unMem.leaf.key.str, key->str, key->len) == 0 ) {
-        /* key has been exist, no need to insert */
+        /* key exists */
         return ;
     }
 
@@ -176,10 +172,13 @@ Trie::prefixMatch (const String &str, TrieNodeArray &nodearray)
     guint len = 0;
     guint i = 0;
 
-    while ( node != NULL && node->kind == BRANCH && i < str.length () ) {
-        node = node->unMem.branch.child[order(str[i])];
-        ++len;
-        ++i;
+    while ( node != NULL &&
+            node->kind == BRANCH &&
+            i < str.length () ) {
+
+            node = node->unMem.branch.child[order(str[i])];
+            ++len;
+            ++i;
     }
 
     while ( i < str.length () ) {
@@ -187,21 +186,14 @@ Trie::prefixMatch (const String &str, TrieNodeArray &nodearray)
         ++i;
     }
 
-    gint strLen = str.length ();
     if ( node == NULL ||
-        (node->kind == LEAF && str != node->unMem.leaf.key.str) ) {
+        (node->kind == LEAF &&
+         strncmp (str, node->unMem.leaf.key.str, str.length ())
+        ) ) {
+        /* match failed */
         cerr << "match failed!" << endl;
-        KeyType key;
-        RecordType record = 1000000;
-        key.str = new gchar [strLen + 1];
-        memcpy (key.str, str.c_str(), strLen + 1);
-        key.len = strLen;
-        insert (&key, &record);
-        delete [] key.str;
-
-        /* save new word */
-        saveNewWord (str.c_str (), len);
     } else {
+        /* match ok */
         cerr << "match succeed!" << endl;
         wideTraverse (node, nodearray);
     }
@@ -270,25 +262,6 @@ Trie::print (const TrieNodeArray &nodearray) const
     for ( int i = 0; i < len; ++i ) {
         cout << nodearray[i]->unMem.leaf.key.str << endl;
     }
-}
-
-void
-Trie::saveNewWord (const char *save_ptr, int len)
-{
-    if ( m_ofs == NULL ) {
-        m_ofs = new ofstream;
-        m_ofs->open (".new_word_list", ios_base::app);
-        if ( !m_ofs->is_open () ) {
-            cerr << "open file failed!" << endl;
-            return ;
-        }
-    }
-
-    m_ofs->write (save_ptr, len);
-    m_ofs->write ("\t", 1);
-    m_ofs->write ("1000000", 7);
-    m_ofs->write ("\n", 1);
-    m_ofs->flush ();
 }
 
 void

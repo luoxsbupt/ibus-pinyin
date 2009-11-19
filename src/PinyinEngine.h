@@ -149,6 +149,8 @@ private:
     void updateAuxiliaryTextInInit (void);
     void updateAuxiliaryTextInEnglish (void);
     void updateLookupTable (void);
+    void updateLookupTableInInit (void);
+    void updateLookupTableInEnglish (void);
     void updatePhraseEditor (void);
     void updateCandidateEditor (void);
 

@@ -22,9 +22,9 @@ private :
 gint
 compareFreq (TrieNode *node1, TrieNode *node2)
 {
-    if ( node1->unMem.leaf.info < node2->unMem.leaf.info ) {
+    if ( node1->unMem.leaf.info.freq < node2->unMem.leaf.info.freq ) {
         return -1;
-    } else if ( node1->unMem.leaf.info > node2->unMem.leaf.info ) {
+    } else if ( node1->unMem.leaf.info.freq > node2->unMem.leaf.info.freq ) {
         return 1;
     } else {
         return 0;

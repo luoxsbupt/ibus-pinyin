@@ -34,10 +34,22 @@ CandidateEditor::update (const String &prefix)
     }
 }
 
-bool
+gboolean
 CandidateEditor::isEmpty (void) const
 {
     return m_nodearray.isEmpty ();
+}
+
+gboolean
+CandidateEditor::candidateIsUserWord (guint i) const
+{
+    return m_nodearray[i]->unMem.leaf.info.isUserWord;
+}
+
+void
+CandidateEditor::insertNewNode (const KeyType *key, const RecordType *record)
+{
+    m_root->insert (key, record);
 }
 
 void

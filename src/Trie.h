@@ -27,14 +27,12 @@ public :
 
 private :
     gint order (const gchar c) const;
-    void saveNewWord (const gchar *save_ptr, gint len);
     void sortByFreq (TrieNodeArray &nodearray) const;
     void destroy ();
 
 private :
 
     TrieNode *m_root;
-    ofstream *m_ofs;
 };
 
 };

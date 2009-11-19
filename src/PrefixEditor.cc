@@ -108,7 +108,7 @@ gboolean
 PrefixEditor::moveCursorLeft (void)
 {
     if (G_UNLIKELY (m_cursor == 0)) {
-        return FALSE;
+        return TRUE;
     }
 
     --m_cursor;
@@ -119,7 +119,7 @@ gboolean
 PrefixEditor::moveCursorRight (void)
 {
     if (G_UNLIKELY (m_cursor == m_text.length ())) {
-        return FALSE;
+        return TRUE;
     }
 
     ++m_cursor;
