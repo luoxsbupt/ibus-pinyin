@@ -573,7 +573,7 @@ PinyinEngine::processInitMode (guint keyval, guint keycode, guint modifiers)
 {
     gboolean retval = FALSE;
 
-    // ignore release event
+    /* ignore release event */
     if (modifiers & IBUS_RELEASE_MASK) {
         if (m_prev_pressed_key != keyval || m_prev_pressed_key_result != FALSE)
             return TRUE;
@@ -659,6 +659,11 @@ PinyinEngine::processRawMode (guint keyval, guint keycode, guint modifiers)
 inline gboolean
 PinyinEngine::processEnglishMode (guint keyval, guint keycode, guint modifiers)
 {
+    /* ignore release event */
+    if (modifiers & IBUS_RELEASE_MASK) {
+        return TRUE;
+    }
+
     gboolean retval = FALSE;
     static gboolean flag = FALSE;
     if ( !flag ) {
