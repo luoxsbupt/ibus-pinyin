@@ -1,6 +1,8 @@
 #ifndef __PY_ARRAY_H_
 #define __PY_ARRAY_H_
 
+#include <glib.h>
+
 namespace PY {
 
 template<typename T>
@@ -60,7 +62,7 @@ public:
         g_array_insert_val (m_array, i, v);
         return *this;
     }
-
+    
     Array<T> & remove (guint i, guint len) {
         g_array_remove_range (m_array, i, len);
         return *this;

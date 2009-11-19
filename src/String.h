@@ -1,8 +1,11 @@
 #ifndef __PY_STRING_H_
 #define __PY_STRING_H_
+#include <iostream>
 #include <glib.h>
 #include <stdarg.h>
+#include <cstring>
 #include "WideString.h"
+using namespace std;
 
 namespace PY {
 
@@ -20,14 +23,14 @@ public:
         m_string = g_string_sized_new (init_size);
     }
 
-    String (const String &str) {
-        m_string = g_string_sized_new (str.length () + 1);
-        assign (str);
-    }
-
     String (const WideString &wstr) {
         m_string = g_string_sized_new (wstr.length() * 6);
         assign (wstr);
+    }
+
+    String (const String &str) {
+        m_string = g_string_sized_new (str.length());
+        assign (str);
     }
 
     ~String (void) {
@@ -69,7 +72,7 @@ public:
         g_string_append (m_string, str);
         return *this;
     }
-
+    
     String & append (const gunichar *wstr) {
         for (const gunichar *p = wstr; *p != 0; p++)
             appendUnichar (*p);
@@ -142,7 +145,7 @@ public:
     String & operator << (const gchar *str) {
         return append (str);
     }
-
+    
     String & operator << (const gunichar *wstr) {
         return append (wstr);
     }
@@ -184,8 +187,48 @@ public:
         return m_string->len != 0;
     }
 
+    /*
+     * following function added by luoxs
+     * author : luoxs
+     * date : 2009-10-22
+     */
+    friend ostream & operator << (ostream &os, const String &s)
+    {
+        os << s.m_string;
+        return os;
+    }
+
+    friend ostream & operator << (ostream &os, const gchar *str)
+    {
+        os << str;
+        return os;
+    }
+
+    gboolean operator != (const String &s) const
+    {
+        return (memcmp (s.m_string->str, m_string->str, this->length () + 1) ? TRUE : FALSE);
+    }
+
+    gboolean operator != (const gchar *s) const
+    {
+        return (memcmp (s, m_string->str, this->length () + 1) ? TRUE : FALSE);
+    }
+
+    gchar *c_str (void) const
+    {
+        return m_string->str;
+    }
+
+    gboolean clear (void)
+    {
+        g_string_erase (m_string, 0, this->length ());
+    }
+
 private:
+
     GString *m_string;
 };
+
 };
 #endif
+

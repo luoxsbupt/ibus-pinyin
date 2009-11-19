@@ -12,6 +12,10 @@
 #include "Property.h"
 #include "Config.h"
 
+#include "Trie.h"
+#include "PrefixEditor.h"
+#include "CandidateEditor.h"
+
 namespace PY {
 
 class PinyinEngine {
@@ -27,10 +31,36 @@ public:
 
     void reset (gboolean need_update = TRUE) {
         resetQuote ();
-        m_input_mode = MODE_INIT;
-        m_pinyin_editor->reset ();
-        m_phrase_editor.reset ();
-        m_raw_editor.reset ();
+
+        switch ( m_input_mode ) {
+            case MODE_INIT:
+                m_pinyin_editor->reset ();
+                m_phrase_editor.reset ();
+                break;
+            case MODE_RAW:
+                m_input_mode = MODE_INIT;
+                m_raw_editor.reset ();
+                break;
+            case MODE_ENGLISH:
+                m_input_mode = MODE_INIT;
+                m_mode_chinese = TRUE;
+                m_mode_english = FALSE;
+                m_prefix_editor->reset ();
+                m_candidate_editor->reset ();
+                updateUI (need_update);
+                if ( m_prefix_editor ) {
+                    delete m_prefix_editor;
+                    m_prefix_editor = NULL;
+                }
+                if ( m_candidate_editor ) {
+                    delete m_candidate_editor;
+                    m_candidate_editor = NULL;
+                }
+                return ;
+            default:
+                break;
+        }
+
         updateUI (need_update);
     }
 
@@ -50,16 +80,24 @@ public:
     void candidateClicked (guint index, guint button, guint state);
 
     void updateUI (gboolean now = TRUE) {
-        if (G_UNLIKELY (now || m_need_update >= 4)) {
+        if ( m_input_mode == MODE_INIT ) {
+            /* for chinese */
+            if (G_UNLIKELY (now || m_need_update >= 4)) {
+                updateLookupTable ();
+                updateAuxiliaryText ();
+                updatePreeditText ();
+                m_need_update = 0;
+            } else {
+                if (m_need_update == 0) {
+                    g_idle_add ((GSourceFunc) delayUpdateUIHandler, this);
+                }
+                m_need_update ++;
+            }
+        } else if ( m_input_mode == MODE_ENGLISH ) {
+            /* for english input */
             updateLookupTable ();
             updateAuxiliaryText ();
             updatePreeditText ();
-            m_need_update = 0;
-        } else {
-            if (m_need_update == 0) {
-                g_idle_add ((GSourceFunc) delayUpdateUIHandler, this);
-            }
-            m_need_update ++;
         }
     }
 
@@ -70,10 +108,15 @@ private:
     gboolean processStrokeMode (guint keyval, guint keycode, guint modifiers);
     gboolean processExtensionMode (guint keyval, guint keycode, guint modifiers);
     gboolean processPinyin (guint keyval, guint keycode, guint modifiers);
+    gboolean processPrefix (guint keyval, guint keycode, guint modifiers);
     gboolean processCapitalLetter (guint keyval, guint keycode, guint modifiers);
     gboolean processNumber (guint keyval, guint keycode, guint modifiers);
+    gboolean processNumberInInit (guint keyval, guint keycode, guint modifiers);
+    gboolean processNumberInEnglish (guint keyval, guint keycode, guint modifiers);
     gboolean processPunct (guint keyval, guint keycode, guint modifiers);
     gboolean processSpace (guint keyval, guint keycode, guint modifiers);
+    gboolean processSpaceInInit (guint keyval, guint keycode, guint modifiers);
+    gboolean processSpaceInEnglish (guint keyval, guint keycode, guint modifiers);
     gboolean processOthers (guint keyval, guint keycode, guint modifiers);
 
 private:
@@ -86,6 +129,7 @@ private:
     void commit (const String &str);
 
     void toggleModeChinese (void);
+    void toggleModeEnglish (void);
     void toggleModeFull (void);
     void toggleModeFullPunct (void);
     void toggleModeSimp (void);
@@ -98,11 +142,15 @@ private:
     void updatePreeditText (void);
     void updatePreeditTextInInitMode (void);
     void updatePreeditTextInRawMode (void);
+    void updatePreeditTextInENGLISHMode (void);
     void updatePreeditTextInInitEditingMode (void);
     void updatePreeditTextInInitTypingMode (void);
     void updateAuxiliaryText (void);
+    void updateAuxiliaryTextInInit (void);
+    void updateAuxiliaryTextInEnglish (void);
     void updateLookupTable (void);
     void updatePhraseEditor (void);
+    void updateCandidateEditor (void);
 
     static gboolean delayUpdateUIHandler (PinyinEngine *pinyin) {
         if (pinyin->m_need_update > 0)
@@ -110,11 +158,14 @@ private:
         return FALSE;
     }
 
+    void setInputMode ();
 private:
     Pointer<IBusEngine>  m_engine;      // engine pointer
 
     PinyinEditor *m_pinyin_editor;      // pinyin editor
+    PrefixEditor *m_prefix_editor;      // english editor
     PhraseEditor m_phrase_editor;       // phrase editor
+    CandidateEditor *m_candidate_editor;    // word editor
     String m_buffer;                    // string buffer
 
     gint m_need_update;                 // need update preedit, aux, or lookup table
@@ -128,6 +179,7 @@ private:
     PropList    m_props;
 
     gboolean m_mode_chinese;
+    gboolean m_mode_english;
     gboolean m_mode_full;
     gboolean m_mode_full_punct;
 
@@ -152,3 +204,4 @@ private:
 };
 
 #endif
+

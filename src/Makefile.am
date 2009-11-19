@@ -47,6 +47,10 @@ ibus_engine_c_sources = \
 	PinyinParser.cc \
 	SimpTradConverter.cc \
 	SpecialTable.cc \
+	Trie.cc \
+	Queue.cc \
+	CandidateEditor.cc \
+	PrefixEditor.cc \
 	$(NULL)
 ibus_engine_built_h_sources = \
 	PinyinParserTable.h \
@@ -83,6 +87,13 @@ ibus_engine_h_sources = \
 	Types.h \
 	Util.h \
 	WideString.h \
+	StringArray.h \
+	QSort.h \
+	Trie.h \
+	Queue.h \
+	Trietype.h \
+	CandidateEditor.h \
+	PrefixEditor.h \
 	$(NULL)
 ibus_engine_pinyin_SOURCES = \
 	$(ibus_engine_c_sources) \
