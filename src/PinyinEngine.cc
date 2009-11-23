@@ -638,8 +638,8 @@ PinyinEngine::processInitMode (guint keyval, guint keycode, guint modifiers)
     switch (keyval) {
     /* letters */
     case IBUS_a ... IBUS_z:
-        if (keyval == IBUS_v) {
-            if ( isEmpty () && !(modifiers & IBUS_CONTROL_MASK)) {
+        if (m_mode_chinese && keyval == IBUS_v) {
+            if (isEmpty () && !(modifiers & IBUS_CONTROL_MASK)) {
                 m_input_mode = MODE_ENGLISH;
                 m_prefix_editor = new PrefixEditor;
                 m_candidate_editor = new CandidateEditor;
