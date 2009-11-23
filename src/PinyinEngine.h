@@ -43,8 +43,7 @@ public:
                 break;
             case MODE_ENGLISH:
                 m_input_mode = MODE_INIT;
-                m_mode_chinese = TRUE;
-                m_mode_english = FALSE;
+                // m_mode_chinese = TRUE;
                 m_prefix_editor->reset ();
                 m_candidate_editor->reset ();
                 updateUI (need_update);
@@ -129,7 +128,6 @@ private:
     void commit (const String &str);
 
     void toggleModeChinese (void);
-    void toggleModeEnglish (void);
     void toggleModeFull (void);
     void toggleModeFullPunct (void);
     void toggleModeSimp (void);
@@ -160,7 +158,6 @@ private:
         return FALSE;
     }
 
-    void setInputMode ();
 private:
     Pointer<IBusEngine>  m_engine;      // engine pointer
 
@@ -181,7 +178,6 @@ private:
     PropList    m_props;
 
     gboolean m_mode_chinese;
-    gboolean m_mode_english;
     gboolean m_mode_full;
     gboolean m_mode_full_punct;
 

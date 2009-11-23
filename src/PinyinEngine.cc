@@ -27,7 +27,6 @@ PinyinEngine::PinyinEngine (IBusEngine *engine)
       m_need_update (0),
       m_lookup_table (Config::pageSize ()),
       m_mode_chinese (Config::initChinese ()),
-      m_mode_english (Config::initEnglish ()),
       m_mode_full (Config::initFull ()),
       m_mode_full_punct (Config::initFullPunct ()),
       m_quote (TRUE),
@@ -326,46 +325,46 @@ PinyinEngine::processSpaceInInit (guint keyval, guint keycode, guint modifiers)
 gboolean
 PinyinEngine::processSpaceInEnglish(guint keyval, guint keycode, guint modifiers)
 {
-    if ( m_mode_english ) {
-        if ( m_candidate_editor->isEmpty () ) {
-            if ( m_prefix_editor->textLength () > 0 ) {
-                commit (m_prefix_editor->text ());
+    if ( m_candidate_editor->isEmpty () ) {
+        if ( m_prefix_editor->textLength () > 0 ) {
+            commit (m_prefix_editor->text ());
 
-                /* no responding word exists, save and insert it to tree */
-                /* insert new node to trietree */
-                guint strLen = m_prefix_editor->textLength ();
+            /* no responding word exists, save and insert it to tree */
+            /* insert new node to trietree */
+            guint strLen = m_prefix_editor->textLength ();
 
-                KeyType key;
-                key.str = new gchar [strLen + 1];
-                memcpy (key.str, m_prefix_editor->text ().c_str(), strLen + 1);
-                key.len = strLen;
+            KeyType key;
+            key.str = new gchar [strLen + 1];
+            memcpy (key.str, m_prefix_editor->text ().c_str(), strLen + 1);
+            key.len = strLen;
 
-                RecordType record;
-                record.freq = 1000000;
-                record.isUserWord = true;
+            RecordType record;
+            record.freq = 1000000;
+            record.isUserWord = true;
 
-                m_candidate_editor->insertNewNode (&key, &record);
-                delete [] key.str;
+            m_candidate_editor->insertNewNode (&key, &record);
+            delete [] key.str;
 
-                /* save new word to local file */
-                ofstream ofs (".user_word", ios_base::app);
-                if ( !ofs.is_open () ) {
-                    cerr << "open \".user_wrod\" failed!" << endl;
-                }
-                ofs.write (m_prefix_editor->text (), m_prefix_editor->textLength ());
-                ofs.write ("\t", 1);
-                ofs.write ("1000000", 7);
-                ofs.write ("\n", 1);
-                ofs.flush ();
-                ofs.close ();
+            /* save new word to local file */
+            ofstream ofs (".user_word", ios_base::app);
+            if ( !ofs.is_open () ) {
+                cerr << "open \".user_wrod\" failed!" << endl;
             }
-        } else {
-            commit (m_candidate_editor->candidate (0));
-        }
 
-        toggleModeChinese ();
-        reset ();
+            ofs.write (m_prefix_editor->text (), m_prefix_editor->textLength ());
+            ofs.write ("\t", 1);
+            ofs.write ("1000000", 7);
+            ofs.write ("\n", 1);
+            ofs.flush ();
+            ofs.close ();
+        }
+    } else {
+        /* commit word specified by cursor */
+        commit (m_candidate_editor->candidate (m_lookup_table.cursorPos ()));
     }
+
+    toggleModeChinese ();
+    reset ();
 
     return TRUE;
 }
@@ -655,7 +654,9 @@ PinyinEngine::processInitMode (guint keyval, guint keycode, guint modifiers)
     case IBUS_a ... IBUS_z:
         if (keyval == IBUS_v) {
             if ( isEmpty () && !(modifiers & IBUS_CONTROL_MASK)) {
-                toggleModeEnglish ();
+                m_input_mode = MODE_ENGLISH;
+                m_prefix_editor = new PrefixEditor;
+                m_candidate_editor = new CandidateEditor;
                 return TRUE;
             }
         }
@@ -808,24 +809,10 @@ PinyinEngine::processExtensionMode (guint keyval, guint keycode, guint modifiers
     return TRUE;
 }
 
-void 
-PinyinEngine::setInputMode ()
-{
-    if ( m_mode_chinese ) {
-        m_input_mode = MODE_INIT;
-    } else if ( m_mode_english ) {
-        m_input_mode = MODE_ENGLISH;
-    } else {
-        /* add later */
-    }
-}
-
 gboolean
 PinyinEngine::processKeyEvent (guint keyval, guint keycode, guint modifiers)
 {
     gboolean retval;
-
-    setInputMode ();
 
     switch (m_input_mode) {
     case MODE_INIT:
@@ -920,15 +907,6 @@ PinyinEngine::toggleModeChinese (void)
 
     m_prop_full_punct.setSensitive (m_mode_chinese);
     ibus_engine_update_property (m_engine, m_prop_full_punct);
-}
-
-inline void
-PinyinEngine::toggleModeEnglish (void)
-{
-    m_mode_chinese = m_mode_chinese ? FALSE : TRUE;
-    m_mode_english = m_mode_english ? FALSE : TRUE;
-    m_prefix_editor = new PrefixEditor;
-    m_candidate_editor = new CandidateEditor;
 }
 
 inline void
