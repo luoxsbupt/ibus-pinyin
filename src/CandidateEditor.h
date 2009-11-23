@@ -18,6 +18,7 @@ public:
     gboolean isEmpty (void) const;
     gboolean candidateIsUserWord (guint i) const;
     void insertNewNode (const KeyType *key, const RecordType *record);
+    void processUserWord (const String &word);
     void reset (void);
 
     TrieNodeArray candidates (void) const;
@@ -29,7 +30,8 @@ private:
     TrieNodeArray m_nodearray;
 
     /* root node */
-    static Trie     *m_root;
+    // static Trie     *m_root;
+    Trie     *m_root;
 };
 
 };

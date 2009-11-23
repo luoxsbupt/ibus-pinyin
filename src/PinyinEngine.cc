@@ -1,6 +1,5 @@
 /* vim:set et sts=4: */
 
-#include <fstream>
 #include <ibus.h>
 #include <string.h>
 #include <libintl.h>
@@ -272,8 +271,8 @@ PinyinEngine::processNumberInEnglish (guint keyval, guint keycode, guint modifie
     index += (cursorPos / pageSize) * pageSize;
 
     commit (m_candidate_editor->candidate (index - 1));
-    toggleModeChinese ();
     reset ();
+    toggleModeChinese ();
     return TRUE;
 }
 
@@ -328,43 +327,30 @@ PinyinEngine::processSpaceInEnglish(guint keyval, guint keycode, guint modifiers
     if ( m_candidate_editor->isEmpty () ) {
         if ( m_prefix_editor->textLength () > 0 ) {
             commit (m_prefix_editor->text ());
-
-            /* no responding word exists, save and insert it to tree */
-            /* insert new node to trietree */
-            guint strLen = m_prefix_editor->textLength ();
-
-            KeyType key;
-            key.str = new gchar [strLen + 1];
-            memcpy (key.str, m_prefix_editor->text ().c_str(), strLen + 1);
-            key.len = strLen;
-
-            RecordType record;
-            record.freq = 1000000;
-            record.isUserWord = true;
-
-            m_candidate_editor->insertNewNode (&key, &record);
-            delete [] key.str;
-
-            /* save new word to local file */
-            ofstream ofs (".user_word", ios_base::app);
-            if ( !ofs.is_open () ) {
-                cerr << "open \".user_wrod\" failed!" << endl;
-            }
-
-            ofs.write (m_prefix_editor->text (), m_prefix_editor->textLength ());
-            ofs.write ("\t", 1);
-            ofs.write ("1000000", 7);
-            ofs.write ("\n", 1);
-            ofs.flush ();
-            ofs.close ();
+            /* is user-word */
+            m_candidate_editor->processUserWord (m_prefix_editor->text ());
         }
     } else {
         /* commit word specified by cursor */
         commit (m_candidate_editor->candidate (m_lookup_table.cursorPos ()));
     }
 
-    toggleModeChinese ();
     reset ();
+    toggleModeChinese ();
+
+    return TRUE;
+}
+
+inline gboolean
+PinyinEngine::processEnter (guint keyval, guint keycode, guint modifiers)
+{
+    if ( m_candidate_editor->isEmpty () ) {
+        m_candidate_editor->processUserWord (m_prefix_editor->text ());
+    }
+
+    commit (m_prefix_editor->text ());
+    reset ();
+    toggleModeChinese ();
 
     return TRUE;
 }
@@ -733,10 +719,7 @@ PinyinEngine::processEnglishMode (guint keyval, guint keycode, guint modifiers)
             break;
         case IBUS_Return:
         case IBUS_KP_Enter:
-            commit (m_prefix_editor->text ());
-            toggleModeChinese ();
-            reset ();
-            retval = TRUE;
+            retval = processEnter (keyval, keycode, modifiers);
             break;
         case IBUS_BackSpace:
             retval = m_prefix_editor->removeCharBefore ();
@@ -763,18 +746,22 @@ PinyinEngine::processEnglishMode (guint keyval, guint keycode, guint modifiers)
         case IBUS_Up:
         case IBUS_KP_Up:
             cursorUp ();
+            retval = TRUE;
             break;
         case IBUS_Down:
         case IBUS_KP_Down:
             cursorDown ();
+            retval = TRUE;
             break;
         case IBUS_Page_Up:
         case IBUS_KP_Page_Up:
             pageUp ();
+            retval = TRUE;
             break;
         case IBUS_Page_Down:
         case IBUS_KP_Page_Down:
             pageDown ();
+            retval = TRUE;
             break;
         case IBUS_Home:
             retval = m_prefix_editor->moveCursorToBegin ();

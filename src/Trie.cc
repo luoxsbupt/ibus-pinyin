@@ -16,6 +16,7 @@ Trie::Trie ()
 Trie::~Trie ()
 {
     destroy ();
+    m_root = NULL;
 }
 
 void
@@ -288,3 +289,4 @@ Trie::order (const char c) const
 }
 
 };
+

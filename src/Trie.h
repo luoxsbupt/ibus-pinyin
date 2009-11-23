@@ -24,11 +24,11 @@ public :
     TrieNode *getRoot (void) const        { return m_root; }
     void print (const TrieNodeArray &nodeArray) const;
     void wideTraverse (const TrieNode *node, TrieNodeArray &leafArray) const;
+    void destroy ();
 
 private :
     gint order (const gchar c) const;
     void sortByFreq (TrieNodeArray &nodearray) const;
-    void destroy ();
 
 private :
 

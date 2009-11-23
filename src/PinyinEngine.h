@@ -43,9 +43,7 @@ public:
                 break;
             case MODE_ENGLISH:
                 m_input_mode = MODE_INIT;
-                // m_mode_chinese = TRUE;
-                m_prefix_editor->reset ();
-                m_candidate_editor->reset ();
+                m_mode_chinese = FALSE;
                 updateUI (need_update);
                 if ( m_prefix_editor ) {
                     delete m_prefix_editor;
@@ -116,6 +114,7 @@ private:
     gboolean processSpace (guint keyval, guint keycode, guint modifiers);
     gboolean processSpaceInInit (guint keyval, guint keycode, guint modifiers);
     gboolean processSpaceInEnglish (guint keyval, guint keycode, guint modifiers);
+    gboolean processEnter (guint keyval, guint keycode, guint modifiers);
     gboolean processOthers (guint keyval, guint keycode, guint modifiers);
 
 private:

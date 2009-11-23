@@ -1,14 +1,11 @@
+#include <fstream>
 #include "CandidateEditor.h"
 
 namespace PY {
 
-Trie *CandidateEditor::m_root = 0;
-
 CandidateEditor::CandidateEditor (void)
 {
-    if ( !m_root ) {
-        m_root = new Trie;
-    }
+    m_root = new Trie;
 }
 
 CandidateEditor::~CandidateEditor (void)
@@ -50,6 +47,38 @@ void
 CandidateEditor::insertNewNode (const KeyType *key, const RecordType *record)
 {
     m_root->insert (key, record);
+}
+
+void
+CandidateEditor::processUserWord (const String &word)
+{
+    /* add to trietree */
+    guint strLen = word.length ();
+
+    KeyType key;
+    key.str = new gchar [strLen + 1];
+    strncpy (key.str, word.c_str (), strLen + 1);
+    key.len = strLen;
+
+    RecordType record;
+    record.freq = 1000000;
+    record.isUserWord = true;
+
+    m_root->insert (&key, &record);
+    delete [] key.str;
+
+    /* save to cache file */
+    ofstream ofs (".user_word", ios_base::out | ios_base::app);
+    if ( !ofs.is_open () ) {
+        cerr << "open \".user_wrod\" failed!" << endl;
+    }
+
+    ofs.write (word, word.length ());
+    ofs.write ("\t", 1);
+    ofs.write ("1000000", 7);
+    ofs.write ("\n", 1);
+    ofs.flush ();
+    ofs.close ();
 }
 
 void
