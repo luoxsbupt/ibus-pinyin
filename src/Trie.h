@@ -19,6 +19,7 @@ public :
 public :
     void createTrieTree(const gchar *filename);
     TrieNode * search (const KeyType *elem) const;
+    void adjustFreq (const String &word);
     void insert (const KeyType *elem, const RecordType *record);
     void prefixMatch (const String &str, TrieNodeArray &nodearray);
     TrieNode *getRoot (void) const        { return m_root; }

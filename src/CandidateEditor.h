@@ -17,8 +17,8 @@ public:
     void setRootNode (Trie *root);
     gboolean isEmpty (void) const;
     gboolean candidateIsUserWord (guint i) const;
-    void insertNewNode (const KeyType *key, const RecordType *record);
-    void processUserWord (const String &word);
+    void processUserWord (const String &userWord);
+    void adjustFrequency (const String &candidateWord);
     void reset (void);
 
     TrieNodeArray candidates (void) const;

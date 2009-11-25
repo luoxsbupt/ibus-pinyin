@@ -44,12 +44,6 @@ CandidateEditor::candidateIsUserWord (guint i) const
 }
 
 void
-CandidateEditor::insertNewNode (const KeyType *key, const RecordType *record)
-{
-    m_root->insert (key, record);
-}
-
-void
 CandidateEditor::processUserWord (const String &word)
 {
     /* add to trietree */
@@ -79,6 +73,14 @@ CandidateEditor::processUserWord (const String &word)
     ofs.write ("\n", 1);
     ofs.flush ();
     ofs.close ();
+}
+
+void
+CandidateEditor::adjustFrequency (const String &candidateWord)
+{
+    if ( candidateWord.length () != 0 ) {
+        m_root->adjustFreq (candidateWord);
+    }
 }
 
 void

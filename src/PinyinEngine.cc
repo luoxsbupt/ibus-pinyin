@@ -327,12 +327,15 @@ PinyinEngine::processSpaceInEnglish(guint keyval, guint keycode, guint modifiers
     if ( m_candidate_editor->isEmpty () ) {
         if ( m_prefix_editor->textLength () > 0 ) {
             commit (m_prefix_editor->text ());
-            /* is user-word */
+            /* is userword */
             m_candidate_editor->processUserWord (m_prefix_editor->text ());
         }
     } else {
         /* commit word specified by cursor */
-        commit (m_candidate_editor->candidate (m_lookup_table.cursorPos ()));
+        String candidate (m_candidate_editor->candidate (m_lookup_table.cursorPos ()));
+        // commit (m_candidate_editor->candidate (m_lookup_table.cursorPos ()));
+        commit (candidate);
+        m_candidate_editor->adjustFrequency (candidate);
     }
 
     reset ();

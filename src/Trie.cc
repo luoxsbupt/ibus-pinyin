@@ -73,24 +73,43 @@ Trie::createTrieTree(const gchar *filename)
 TrieNode *
 Trie::search (const KeyType *elem) const
 {
-    TrieNode *node = m_root;
     int i = 0;
-    int index = 0;
+    TrieNode *node = m_root;
 
-    while ( i < elem->len && node != NULL && node->kind == BRANCH ) {
-        index = elem->str[i] - 'a';
-        node = node->unMem.branch.child[index];
+    while ( node != NULL && node->kind == BRANCH && i <= elem->len ) {
+        node = node->unMem.branch.child[order(elem->str[i])];
         ++i;
     }
 
-    if ( node != NULL
-            && node->kind == LEAF
-            && (node->unMem.leaf.key.len == elem->len)
-            && memcmp (elem->str, node->unMem.leaf.key.str, elem->len) == 0 ) {
+    if ( node != NULL &&
+         node->kind == LEAF &&
+         strncmp (node->unMem.leaf.key.str, elem->str, elem->len + 1) == 0 ) {
         return node;
     }
 
     return NULL;
+}
+
+void
+Trie::adjustFreq (const String &word)
+{
+    if ( word.isEmpty () ) {
+        return ;
+    }
+
+    KeyType key;
+    key.str = new char [word.length () +1];
+    strncpy (key.str, word.c_str (), word.length () + 1);
+    key.len = word.length ();
+
+    /* adjust the frequency of candidate */
+    TrieNode *node = search (&key);
+    if ( NULL != node ) {
+        node->unMem.leaf.info.freq += 100000;
+    }
+
+    delete [] key.str;
+    key.str = NULL;
 }
 
 void
@@ -116,16 +135,18 @@ Trie::insert (const KeyType *key, const RecordType *record)
     int i = 0;
 
     /* is exist? */
-    while ( node != NULL && node->kind == BRANCH && i < key->len ) {
+    while ( node != NULL &&
+            node->kind == BRANCH &&
+            i <= key->len ) {
         parent = node;
         node = node->unMem.branch.child[order(key->str[i])];
         ++i;
     }
 
-    if ( node != NULL
-        && node->kind == LEAF
-        && (node->unMem.leaf.key.len == key->len)
-        && memcmp (node->unMem.leaf.key.str, key->str, key->len) == 0 ) {
+    if ( node != NULL &&
+         node->kind == LEAF &&
+         node->unMem.leaf.key.len == key->len &&
+         strncmp (node->unMem.leaf.key.str, key->str, key->len) == 0 ) {
         /* key exists */
         return ;
     }
@@ -176,21 +197,14 @@ Trie::prefixMatch (const String &str, TrieNodeArray &nodearray)
     while ( node != NULL &&
             node->kind == BRANCH &&
             i < str.length () ) {
-
             node = node->unMem.branch.child[order(str[i])];
             ++len;
             ++i;
     }
 
-    while ( i < str.length () ) {
-        ++len;
-        ++i;
-    }
-
     if ( node == NULL ||
         (node->kind == LEAF &&
-         strncmp (str, node->unMem.leaf.key.str, str.length ())
-        ) ) {
+         strncmp (str, node->unMem.leaf.key.str, str.length ())) ) {
         /* match failed */
         cerr << "match failed!" << endl;
     } else {
@@ -280,6 +294,8 @@ Trie::order (const char c) const
         idx = c - 'a' + 1;
     } else if ( c <= 'Z' && c>= 'A' ) {
         idx = c - 'A' + 1;
+    } else if ( c == '\0' ) {
+        idx = 0;
     } else {
         cerr << "invalid character!" << endl;
         idx = -1;
